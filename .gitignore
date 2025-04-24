@@ -1,0 +1,19 @@
+# .gitignore
+# Ignore node_modules and cache files
+node_modules/
+.cache/
+*.pack
+*.dll
+
+# Ignore build outputs
+dist/
+build/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# OS junk
+.DS_Store
+Thumbs.db
