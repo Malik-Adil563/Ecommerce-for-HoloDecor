@@ -44,6 +44,10 @@ app.use(cors({
 }));
 app.use(cookieParser());
 
+app.get('/', (req, res) => {
+    res.json("Hello");
+  });
+
 // Route to get all products
 app.get('/getProducts', async (req, res) => {
     try {
