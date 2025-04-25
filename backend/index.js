@@ -8,37 +8,16 @@ const cookieParser = require("cookie-parser");
 const stripe = require("stripe")("sk_test_51PkqswRqTY1bRAbmAOPcjettpFGO7bYrOQPOgKfsmIbmz4kVPyRyEug8QX7LTISynPofxC6I5VSmOI6oqT3IIObQ00c0wnhs55");
 const { v4: uuid } = require("uuid");
 const axios = require('axios');
-const { spawn } = require('child_process');  // Importing child_process module
 
 const app = express();
-const port = 8000;
 
-// Automatically start the Python Flask server
-function startPythonServer() {
-  // Spawn the Python server as a child process
-  const pythonProcess = spawn('C:\\Users\\HP\\AppData\\Local\\Programs\\Python\\Python310\\python.exe', ['C:/E-Commerce for HoloDecor/backend/wall_detector.py']);
-
-
-  pythonProcess.stdout.on('data', (data) => {
-    console.log(`Python stdout: ${data}`);
-  });
-
-  pythonProcess.stderr.on('data', (data) => {
-    console.error(`Python stderr: ${data}`);
-  });
-
-  pythonProcess.on('close', (code) => {
-    console.log(`Python process exited with code ${code}`);
-  });
-}
-
-// Start Python server when Express.js server starts
-startPythonServer();
+// Vercel uses this variable to set the correct port
+const port = process.env.PORT || 8000;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({
-    origin: ["http://localhost:3000"],
+    origin: ["http://localhost:3000", "https://your-frontend.vercel.app"], // Add your actual frontend URL
     methods: ["GET", "POST"],
     credentials: true
 }));
@@ -59,8 +38,20 @@ app.get('/getProducts', async (req, res) => {
     }
 });
 
-// Existing routes for /register, /login, /payment...
+// Wall detection route (updated for Replit)
+app.post('/detect-wall', async (req, res) => {
+    try {
+        const { image } = req.body;
+        const response = await axios.post('https://772882ff-a4b1-4a7c-b5f7-746ce2197e5a-00-36a8ehinjkrh2.pike.replit.dev/detect-wall', { image });
 
+        res.status(200).json({ wallDetected: response.data.wallDetected });
+    } catch (error) {
+        console.error('Error detecting wall:', error.response?.data || error.message);
+        res.status(500).json({ error: 'Wall detection failed' });
+    }
+});
+
+// Get single product
 app.get('/getProduct/:productCode', async (req, res) => {
     try {
         const { productCode } = req.params;
@@ -68,11 +59,11 @@ app.get('/getProduct/:productCode', async (req, res) => {
         if (!product) return res.status(404).json({ error: 'Product not found' });
         res.json(product);
     } catch (error) {
-        console.error('Error fetching product:', error);
         res.status(500).json({ error: error.message });
     }
 });
 
+// Get products by category
 app.get('/getProductsByCategory/:category', async (req, res) => {
     try {
         const { category } = req.params;
@@ -80,7 +71,6 @@ app.get('/getProductsByCategory/:category', async (req, res) => {
         if (!products) return res.status(404).json({ error: 'No products found' });
         res.json(products);
     } catch (error) {
-        console.error('Error fetching products by category:', error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -124,12 +114,11 @@ app.post("/login", async (req, res) => {
             return res.status(400).send('Invalid credentials!');
         }
     } catch (error) {
-        console.error('Error during login:', error);
         return res.status(500).send('Internal Server Error');
     }
 });
 
-// Payment Route
+// Stripe Payment
 app.post("/payment", async (req, res) => {
     const { product, token } = req.body;
     const idempotencyKey = uuid();
@@ -157,27 +146,7 @@ app.post("/payment", async (req, res) => {
 
         res.status(200).json(charge);
     } catch (err) {
-        console.log(err);
         res.status(500).json({ error: err.message });
-    }
-});
-
-// Add a route for wall detection
-app.post('/detect-wall', async (req, res) => {
-    try {
-        const { image } = req.body;  // Expecting image data in the request body
-        
-        // Send image to the Python Flask server
-        const response = await axios.post('http://localhost:5000/detect-wall', { image });
-        
-        if (response.data.wallDetected) {
-            res.status(200).json({ wallDetected: true });
-        } else {
-            res.status(200).json({ wallDetected: false });
-        }
-    } catch (error) {
-        console.error('Error detecting wall:', error);
-        res.status(500).json({ error: error.message });
     }
 });
 
