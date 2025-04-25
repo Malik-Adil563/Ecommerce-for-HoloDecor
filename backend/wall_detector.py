@@ -2,10 +2,11 @@ from flask import Flask, request, jsonify
 import cv2
 import numpy as np
 import base64
+import train_wall_model  # Always run the training script
 from joblib import load
 
 app = Flask(__name__)
-model = load("C:\\Users\\HP\\OneDrive\\Documents\\MERN\\E-Commerce for HoloDecor\\backend\\wall_detector_model.joblib")
+model = load("C:\\E-Commerce for HoloDecor\\backend\\wall_detector_model.joblib")
 
 def extract_features_from_bytes(image_bytes):
     np_arr = np.frombuffer(base64.b64decode(image_bytes), np.uint8)

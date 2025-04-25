@@ -1,22 +1,41 @@
 const express = require('express');
 const cors = require('cors');
+const Products = require('./models/Products');
+const User = require('./models/users');
 const bcryptjs = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const cookieParser = require("cookie-parser");
 const stripe = require("stripe")("sk_test_51PkqswRqTY1bRAbmAOPcjettpFGO7bYrOQPOgKfsmIbmz4kVPyRyEug8QX7LTISynPofxC6I5VSmOI6oqT3IIObQ00c0wnhs55");
 const { v4: uuid } = require("uuid");
-
-const Products = require('./models/Products');
-const User = require('./models/users');
-
-const tf = require('@tensorflow/tfjs-node');
-const mobilenet = require('@tensorflow-models/mobilenet');
-const { createCanvas, loadImage } = require('canvas');
+const axios = require('axios');
+const { spawn } = require('child_process');  // Importing child_process module
 
 const app = express();
 const port = 8000;
 
-app.use(express.json({ limit: '10mb' }));
+// Automatically start the Python Flask server
+function startPythonServer() {
+  // Spawn the Python server as a child process
+  const pythonProcess = spawn('C:\\Users\\HP\\AppData\\Local\\Programs\\Python\\Python310\\python.exe', ['C:/E-Commerce for HoloDecor/backend/wall_detector.py']);
+
+
+  pythonProcess.stdout.on('data', (data) => {
+    console.log(`Python stdout: ${data}`);
+  });
+
+  pythonProcess.stderr.on('data', (data) => {
+    console.error(`Python stderr: ${data}`);
+  });
+
+  pythonProcess.on('close', (code) => {
+    console.log(`Python process exited with code ${code}`);
+  });
+}
+
+// Start Python server when Express.js server starts
+startPythonServer();
+
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({
     origin: ["http://localhost:3000"],
@@ -25,47 +44,7 @@ app.use(cors({
 }));
 app.use(cookieParser());
 
-let model;
-
-// Load MobileNet model from @tensorflow-models/mobilenet
-const loadModel = async () => {
-    model = await mobilenet.load({ version: 2, alpha: 1.0 });
-    console.log('MobileNet model loaded');
-};
-loadModel();
-
-// Route to check if image contains a wall
-app.post('/check-wall', async (req, res) => {
-    try {
-        const imageData = req.body.image;
-        const base64Data = imageData.replace(/^data:image\/\w+;base64,/, '');
-        const buffer = Buffer.from(base64Data, 'base64');
-
-        const image = await loadImage(buffer);
-        const canvas = createCanvas(224, 224);
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(image, 0, 0, 224, 224);
-
-        const input = tf.browser.fromPixels(canvas);
-        const batched = input.expandDims(0).toFloat().div(tf.scalar(127)).sub(tf.scalar(1));
-
-        const predictions = await model.classify(batched);
-        console.log('Predictions:', predictions);
-
-        // Example class indexes that may represent wall-like objects
-        const wallClasses = [401, 894, 721, 701, 819]; // Replace with actual if needed
-
-        const isWall = predictions.some(prediction => wallClasses.includes(prediction.classId));
-
-        res.json({ isWall });
-
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Failed to process image' });
-    }
-});
-
-// Routes for Products
+// Route to get all products
 app.get('/getProducts', async (req, res) => {
     try {
         const products = await Products.find();
@@ -75,6 +54,8 @@ app.get('/getProducts', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
+// Existing routes for /register, /login, /payment...
 
 app.get('/getProduct/:productCode', async (req, res) => {
     try {
@@ -177,7 +158,25 @@ app.post("/payment", async (req, res) => {
     }
 });
 
-// Start the server
+// Add a route for wall detection
+app.post('/detect-wall', async (req, res) => {
+    try {
+        const { image } = req.body;  // Expecting image data in the request body
+        
+        // Send image to the Python Flask server
+        const response = await axios.post('http://localhost:5000/detect-wall', { image });
+        
+        if (response.data.wallDetected) {
+            res.status(200).json({ wallDetected: true });
+        } else {
+            res.status(200).json({ wallDetected: false });
+        }
+    } catch (error) {
+        console.error('Error detecting wall:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 app.listen(port, () => {
     console.log(`Server is running on port ${port}!`);
 });
