@@ -40,15 +40,22 @@ app.get('/getProducts', async (req, res) => {
 });
 
 // Wall detection route (updated for Replit)
+// Add a route for wall detection
 app.post('/detect-wall', async (req, res) => {
     try {
-        const { image } = req.body;
+        const { image } = req.body;  // Expecting image data in the request body
+        
+        // Send image to the Python Flask server
         const response = await axios.post('https://772882ff-a4b1-4a7c-b5f7-746ce2197e5a-00-36a8ehinjkrh2.pike.replit.dev/detect-wall', { image });
-
-        res.status(200).json({ wallDetected: response.data.wallDetected });
+        
+        if (response.data.wallDetected) {
+            res.status(200).json({ wallDetected: true });
+        } else {
+            res.status(200).json({ wallDetected: false });
+        }
     } catch (error) {
-        console.error('Error detecting wall:', error.response?.data || error.message);
-        res.status(500).json({ error: 'Wall detection failed' });
+        console.error('Error detecting wall:', error);
+        res.status(500).json({ error: error.message });
     }
 });
 
