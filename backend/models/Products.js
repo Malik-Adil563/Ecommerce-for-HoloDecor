@@ -1,34 +1,35 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 // Connect to the MongoDB cluster and specify the database 'adilm09'
-mongoose.connect('mongodb+srv://adilm09:Camb786@cluster0.kb3vcsh.mongodb.net/ecommerce?retryWrites=true&w=majority', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => {
-  console.log('Connected to MongoDB');
-})
-.catch(err => {
-  console.error('Error connecting to MongoDB:', err);
-});
+mongoose.connect('mongodb+srv://adilm09:Camb786@cluster0.kb3vcsh.mongodb.net/ecommerce?retryWrites=true&w=majority')
+  .then(() => {
+    console.log('Connected to MongoDB users');
+  })
+  .catch(err => {
+    console.error('Error connecting to MongoDB:', err);
+  });
 
-// Define the schema for the 'product' collection
-const userInSchema = new mongoose.Schema({
-    title: String,
-    price: Number,
-    description: String,
-    category: String,
-    image: String,
-    rating: {
-        rate: Number,
-        count: Number
+// Define the schema for the 'users' collection
+const userSchema = new mongoose.Schema({
+    name:{
+        type : String,
+        required : true
     },
-    productCode: Number, 
-    id: Number
-});
-  
+    email:{
+        type: String,
+        required: true,
+        unique: true
+    },
+    password: {
+        type: String,
+        required: true
+    }, 
+    token:{
+        type: String,
+        default: null
+    }
+}, {timestamps: true})
 
-// Create the model for the 'product' collection
-const Products = mongoose.model("Products", userInSchema, 'products'); 
+const User = mongoose.model("User", userSchema, 'users');
 
-module.exports = Products;
+module.exports = User;
