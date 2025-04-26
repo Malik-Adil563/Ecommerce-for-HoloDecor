@@ -19,7 +19,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors({
     origin: ["http://localhost:3000", "https://holo-decor-ar-frontend.vercel.app/"], // Add your actual frontend URL
     methods: ["GET", "POST"],
-    credentials: true
+    credentials: true,
+    origin: true
 }));
 app.use(cookieParser());
 
