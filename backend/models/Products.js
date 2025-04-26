@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 // Connect to the MongoDB cluster and specify the database 'adilm09'
-mongoose.connect('mongodb+srv://adilm09:Camb786@cluster0.kb3vcsh.mongodb.net/ecommerce?retryWrites=true&w=majority')
+mongoose.connect('mongodb+srv://adilm09:Camb786@cluster0.kb3vcsh.mongodb.net/internee/ecommerce?retryWrites=true&w=majority')
   .then(() => {
     console.log('Connected to MongoDB users');
   })
