@@ -46,7 +46,7 @@ app.post('/detect-wall', async (req, res) => {
         const { image } = req.body;  // Expecting image data in the request body
         
         // Send image to the Python Flask server
-        const response = await axios.post('https://772882ff-a4b1-4a7c-b5f7-746ce2197e5a-00-36a8ehinjkrh2.pike.replit.dev/detect-wall', { image });
+        const response = await axios.post('https://14cf3993-0a8a-4fcc-a670-81d92d092b65-00-3ib9bcwcj2mzr.sisko.replit.dev/detect-wall', { image });
         
         if (response.data.wallDetected) {
             res.status(200).json({ wallDetected: true });
