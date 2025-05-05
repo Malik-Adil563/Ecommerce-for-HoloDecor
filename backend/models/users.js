@@ -1,13 +1,5 @@
 // backend/models/Products.js
 const mongoose = require('mongoose');
-// Connect to the MongoDB cluster and specify the database 'adilm09'
-mongoose.connect('mongodb+srv://adilm09:Camb786@cluster0.kb3vcsh.mongodb.net/internee/Users?retryWrites=true&w=majority')
-  .then(() => {
-    console.log('Connected to MongoDB products');
-  })
-  .catch(err => {
-    console.error('Error connecting to MongoDB:', err);
-  });
 
 const userInSchema = new mongoose.Schema({
   title: String,
