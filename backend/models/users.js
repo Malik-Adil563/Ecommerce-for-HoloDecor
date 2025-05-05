@@ -1,19 +1,10 @@
-// backend/models/Products.js
 const mongoose = require('mongoose');
 
-const userInSchema = new mongoose.Schema({
-  title: String,
-  price: Number,
-  description: String,
-  category: String,
-  image: String,
-  rating: {
-    rate: Number,
-    count: Number
-  },
-  productCode: Number,
-  id: Number
-});
+const userSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    token: { type: String, default: null }
+}, { timestamps: true });
 
-const Products = mongoose.model("Products", userInSchema, 'products');
-module.exports = Products;
+module.exports = mongoose.model("User", userSchema, 'users');
