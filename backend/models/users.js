@@ -1,10 +1,28 @@
+// backend/models/Products.js
 const mongoose = require('mongoose');
 
-const userSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    token: { type: String, default: null }
-}, { timestamps: true });
+// Connect to the MongoDB cluster and specify the database 'adilm09'
+mongoose.connect('mongodb+srv://adilm09:Camb786@cluster0.kb3vcsh.mongodb.net/internee/ecommerce?retryWrites=true&w=majority')
+  .then(() => {
+    console.log('Connected to MongoDB products');
+  })
+  .catch(err => {
+    console.error('Error connecting to MongoDB:', err);
+  });
 
-module.exports = mongoose.model("User", userSchema, 'users');
+const userInSchema = new mongoose.Schema({
+  title: String,
+  price: Number,
+  description: String,
+  category: String,
+  image: String,
+  rating: {
+    rate: Number,
+    count: Number
+  },
+  productCode: Number,
+  id: Number
+});
+
+const Products = mongoose.model("Products", userInSchema, 'products');
+module.exports = Products;
