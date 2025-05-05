@@ -1,27 +1,17 @@
 const mongoose = require('mongoose');
 
-
-// Define the schema for the 'users' collection
-const userSchema = new mongoose.Schema({
-    name:{
-        type : String,
-        required : true
+const productSchema = new mongoose.Schema({
+    title: String,
+    price: Number,
+    description: String,
+    category: String,
+    image: String,
+    rating: {
+        rate: Number,
+        count: Number
     },
-    email:{
-        type: String,
-        required: true,
-        unique: true
-    },
-    password: {
-        type: String,
-        required: true
-    }, 
-    token:{
-        type: String,
-        default: null
-    }
-}, {timestamps: true})
+    productCode: Number,
+    id: Number
+});
 
-const User = mongoose.model("User", userSchema, 'users');
-
-module.exports = User;
+module.exports = mongoose.model("Product", productSchema, 'products');
