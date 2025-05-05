@@ -1,3 +1,12 @@
+const mongoose = require('mongoose');
+// Connect to the MongoDB cluster and specify the database 'adilm09'
+mongoose.connect('mongodb+srv://adilm09:Camb786@cluster0.kb3vcsh.mongodb.net/internee/ecommerce?retryWrites=true&w=majority')
+  .then(() => {
+    console.log('Connected to MongoDB products');
+  })
+  .catch(err => {
+    console.error('Error connecting to MongoDB:', err);
+  });
 const express = require('express');
 const cors = require('cors');
 const User = require('./models/Products');
@@ -8,7 +17,6 @@ const cookieParser = require("cookie-parser");
 const stripe = require("stripe")("sk_test_51PkqswRqTY1bRAbmAOPcjettpFGO7bYrOQPOgKfsmIbmz4kVPyRyEug8QX7LTISynPofxC6I5VSmOI6oqT3IIObQ00c0wnhs55");
 const { v4: uuid } = require("uuid");
 const axios = require('axios');
-
 const app = express();
 
 // Vercel uses this variable to set the correct port
