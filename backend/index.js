@@ -1,7 +1,9 @@
 const express = require('express');
 const cors = require('cors');
-const User = require('./models/Products');
-const Products = require('./models/users');
+const { run } = require('./models/mongo.js');
+run();
+const Products = require('./models/products.js');
+const User = require('./models/Users.js');
 const bcryptjs = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const cookieParser = require("cookie-parser");
