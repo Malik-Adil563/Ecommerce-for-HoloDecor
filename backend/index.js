@@ -148,7 +148,7 @@ app.post('/forgot-password', async (req, res) => {
       service: "gmail",
       auth: {
         user: "madil4329@gmail.com",
-        pass: "Camb%adil6" // Use app password, not your actual Gmail password
+        pass: "fyat olmf ruar vbkw" // Use app password, not your actual Gmail password
       }
     });
 
