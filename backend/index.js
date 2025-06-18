@@ -11,6 +11,8 @@ const stripe = require("stripe")("sk_test_51PkqswRqTY1bRAbmAOPcjettpFGO7bYrOQPOg
 const { v4: uuid } = require("uuid");
 const axios = require('axios');
 const app = express();
+const crypto = require("crypto");
+const nodemailer = require("nodemailer");
 
 // Vercel uses this variable to set the correct port
 const port = process.env.PORT || 8000;
@@ -126,6 +128,67 @@ app.post("/login", async (req, res) => {
         return res.status(500).send('Internal Server Error');
     }
 });
+
+// Step 1: Send reset link
+app.post('/forgot-password', async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).send("User not found!");
+
+    const token = crypto.randomBytes(32).toString('hex');
+    user.resetToken = token;
+    user.resetTokenExpire = Date.now() + 3600000; // 1 hour
+    await user.save();
+
+    const resetLink = `https://holo-decor-ar-frontend.vercel.app/reset-password/${token}`;
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: "yourgmail@gmail.com",
+        pass: "yourapppassword" // Use app password, not your actual Gmail password
+      }
+    });
+
+    const mailOptions = {
+      from: 'HoloDecor <yourgmail@gmail.com>',
+      to: email,
+      subject: 'Reset Your Password',
+      html: `<p>Hi ${user.name},</p><p>Click the link below to reset your password:</p><p><a href="${resetLink}">${resetLink}</a></p><p>This link will expire in 1 hour.</p>`
+    };
+
+    await transporter.sendMail(mailOptions);
+    res.json({ message: "Reset link sent to your email!" });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error sending reset link");
+  }
+});
+
+// Step 2: Reset password using token
+app.post('/reset-password/:token', async (req, res) => {
+  const { token } = req.params;
+  const { password } = req.body;
+
+  try {
+    const user = await User.findOne({ resetToken: token, resetTokenExpire: { $gt: Date.now() } });
+    if (!user) return res.status(400).send("Invalid or expired token");
+
+    user.password = await bcryptjs.hash(password, 10);
+    user.resetToken = undefined;
+    user.resetTokenExpire = undefined;
+    await user.save();
+
+    res.json({ message: "Password has been reset successfully!" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Failed to reset password");
+  }
+});
+
 
 // Stripe Payment
 app.post("/payment", async (req, res) => {
