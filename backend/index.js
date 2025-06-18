@@ -90,58 +90,67 @@ app.get('/getProductsByCategory/:category', async (req, res) => {
 // User Registration
 app.post("/register", async (req, res) => {
     const { name, email, password } = req.body;
-    if (!(name && email && password)) return res.status(400).send('All fields are compulsory!');
+    if (!(name && email && password)) {
+      return res.status(400).send("All fields are compulsory!");
+    }
   
-    const existingUser = await User.findOne({ email });
-    if (existingUser) return res.status(401).send('User already exists with this Email!');
-  
-    const encPass = await bcryptjs.hash(password, 10);
-    const user = await User.create({ name, email, password: encPass });
-  
-    const token = jwt.sign({ id: user._id }, 'shhhh', { expiresIn: "2h" });
-    user.token = token;
-    user.password = undefined;
-  
-    res.status(201).json({ user, token });
-  
-    // Send Welcome Email
     try {
+      const existingUser = await User.findOne({ email });
+      if (existingUser) return res.status(401).send("User already exists with this Email!");
+  
+      const encPass = await bcryptjs.hash(password, 10);
+      const user = await User.create({ name, email, password: encPass });
+  
+      const token = jwt.sign({ id: user._id }, 'shhhh', { expiresIn: "2h" });
+      user.token = token;
+      user.password = undefined;
+  
+      // ✅ Setup transporter (fixed)
       const transporter = nodemailer.createTransport({
-        service: "gmail",
+        host: "smtp.gmail.com",
+        port: 465,
+        secure: true,
         auth: {
           user: "holodecor@gmail.com",
-          pass: "fyatolmfruarvbkw" // Use your Gmail App Password
+          pass: "your_app_password" // 🔐 Use real app password
         }
       });
   
+      // ✅ Email content (edit as needed)
       const mailOptions = {
         from: 'HoloDecor <holodecor@gmail.com>',
         to: email,
         subject: '🎉 Welcome to HoloDecor!',
         html: `
-          <div style="font-family: Arial, sans-serif;">
-            <h2 style="color: #4CAF50;">Welcome to HoloDecor, ${name}!</h2>
-            <p>We’re thrilled to have you on board. Here’s what you can now enjoy:</p>
-            <ul>
-              <li>🛋️ Explore stylish decor items right from your home.</li>
-              <li>📱 Use AR to visualize furniture directly in your space.</li>
-              <li>🖼️ Wall detection lets you preview items like paintings before buying.</li>
-              <li>💬 Ask our intelligent chatbot for smart recommendations.</li>
-              <li>💳 Shop easily with secure Stripe payments.</li>
-              <li>📦 Track orders and manage your decor journey from your dashboard.</li>
-            </ul>
-            <p style="margin-top: 20px;">Start exploring now: <a href="https://holo-decor-ar-frontend.vercel.app/">Visit HoloDecor</a></p>
-            <p>Happy decorating!<br><strong>— The HoloDecor Team</strong></p>
-          </div>
+          <h2>Welcome to HoloDecor, ${name}!</h2>
+          <p>We're thrilled to have you on board. Here's what you can do on our platform:</p>
+          <ul>
+            <li>🛋️ Browse and purchase 3D furniture and decor items</li>
+            <li>📱 Visualize items in your room using Augmented Reality (AR)</li>
+            <li>🛒 Track orders and manage your profile</li>
+            <li>🤖 Get personalized recommendations from our built-in AI chatbot</li>
+            <li>⚡ Receive updates on latest offers and seasonal discounts</li>
+          </ul>
+          <p>Start exploring at <a href="https://holo-decor-ar-frontend.vercel.app/">HoloDecor</a></p>
+          <br />
+          <p>Happy decorating! ✨</p>
+          <p>— Team HoloDecor</p>
         `
       };
   
-      await transporter.sendMail(mailOptions);
-      console.log("Welcome email sent!");
+      // ✅ Send welcome email
+      try {
+        await transporter.sendMail(mailOptions);
+      } catch (emailErr) {
+        console.error("Error sending welcome email:", emailErr);
+      }
+  
+      res.status(201).json({ user, token });
     } catch (err) {
-      console.error("Error sending welcome email:", err);
+      console.error(err);
+      res.status(500).send("Something went wrong");
     }
-  });  
+  });    
 
 // User Login
 app.post("/login", async (req, res) => {
@@ -269,32 +278,6 @@ app.post("/verify-otp", (req, res) => {
   
     otpStore.delete(email);
     res.json({ success: true });
-  });
-
-  app.get("/test-email", async (req, res) => {
-    try {
-      const transporter = nodemailer.createTransport({
-        host: "smtp.gmail.com",
-        port: 465,
-        secure: true,
-        auth: {
-          user: "holodecor@gmail.com",
-          pass: "fyatolmfruarvbkw"
-        }
-      });
-  
-      await transporter.sendMail({
-        from: "HoloDecor <holodecor@gmail.com>",
-        to: "adilmalik6734@gmail.com",
-        subject: "Test Email",
-        html: "<h2>Welcome to HoloDecor!</h2><p>This is a test email.</p>"
-      });
-  
-      res.send("✅ Test email sent");
-    } catch (err) {
-      console.error("❌ Email error:", err);
-      res.status(500).send("❌ Failed to send test email");
-    }
   });
   
   
