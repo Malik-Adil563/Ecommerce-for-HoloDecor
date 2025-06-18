@@ -270,6 +270,33 @@ app.post("/verify-otp", (req, res) => {
     otpStore.delete(email);
     res.json({ success: true });
   });
+
+  app.get("/test-email", async (req, res) => {
+    try {
+      const transporter = nodemailer.createTransport({
+        host: "smtp.gmail.com",
+        port: 465,
+        secure: true,
+        auth: {
+          user: "holodecor@gmail.com",
+          pass: "fyatolmfruarvbkw"
+        }
+      });
+  
+      await transporter.sendMail({
+        from: "HoloDecor <holodecor@gmail.com>",
+        to: "adilmalik6734@gmail.com",
+        subject: "Test Email",
+        html: "<h2>Welcome to HoloDecor!</h2><p>This is a test email.</p>"
+      });
+  
+      res.send("✅ Test email sent");
+    } catch (err) {
+      console.error("❌ Email error:", err);
+      res.status(500).send("❌ Failed to send test email");
+    }
+  });
+  
   
 
 
