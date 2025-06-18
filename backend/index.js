@@ -111,9 +111,9 @@ app.post("/register", async (req, res) => {
         port: 465,
         secure: true,
         auth: {
-          user: "holodecor@gmail.com",
-          pass: "your_app_password" // 🔐 Use real app password
-        }
+            user: "holodecor@gmail.com",
+            pass: "fyatolmfruarvbkw" // Use app password, not your actual Gmail password
+          }
       });
   
       // ✅ Email content (edit as needed)
