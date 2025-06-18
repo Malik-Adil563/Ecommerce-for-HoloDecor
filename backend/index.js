@@ -127,7 +127,7 @@ app.post("/register", async (req, res) => {
           <ul>
             <li>🛋️ Browse and purchase 3D furniture and decor items</li>
             <li>📱 Visualize items in your room using Augmented Reality (AR)</li>
-            <li>🛒 Track orders and manage your profile</li>
+            <li>🛒 Track orders </li>
             <li>🤖 Get personalized recommendations from our built-in AI chatbot</li>
             <li>⚡ Receive updates on latest offers and seasonal discounts</li>
           </ul>
