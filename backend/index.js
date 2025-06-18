@@ -91,19 +91,57 @@ app.get('/getProductsByCategory/:category', async (req, res) => {
 app.post("/register", async (req, res) => {
     const { name, email, password } = req.body;
     if (!(name && email && password)) return res.status(400).send('All fields are compulsory!');
-
+  
     const existingUser = await User.findOne({ email });
     if (existingUser) return res.status(401).send('User already exists with this Email!');
-
+  
     const encPass = await bcryptjs.hash(password, 10);
     const user = await User.create({ name, email, password: encPass });
-
+  
     const token = jwt.sign({ id: user._id }, 'shhhh', { expiresIn: "2h" });
     user.token = token;
     user.password = undefined;
-
+  
     res.status(201).json({ user, token });
-});
+  
+    // Send Welcome Email
+    try {
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: "holodecor@gmail.com",
+          pass: "fyatolmfruarvbkw" // Use your Gmail App Password
+        }
+      });
+  
+      const mailOptions = {
+        from: 'HoloDecor <holodecor@gmail.com>',
+        to: email,
+        subject: '🎉 Welcome to HoloDecor!',
+        html: `
+          <div style="font-family: Arial, sans-serif;">
+            <h2 style="color: #4CAF50;">Welcome to HoloDecor, ${name}!</h2>
+            <p>We’re thrilled to have you on board. Here’s what you can now enjoy:</p>
+            <ul>
+              <li>🛋️ Explore stylish decor items right from your home.</li>
+              <li>📱 Use AR to visualize furniture directly in your space.</li>
+              <li>🖼️ Wall detection lets you preview items like paintings before buying.</li>
+              <li>💬 Ask our intelligent chatbot for smart recommendations.</li>
+              <li>💳 Shop easily with secure Stripe payments.</li>
+              <li>📦 Track orders and manage your decor journey from your dashboard.</li>
+            </ul>
+            <p style="margin-top: 20px;">Start exploring now: <a href="https://holo-decor-ar-frontend.vercel.app/">Visit HoloDecor</a></p>
+            <p>Happy decorating!<br><strong>— The HoloDecor Team</strong></p>
+          </div>
+        `
+      };
+  
+      await transporter.sendMail(mailOptions);
+      console.log("Welcome email sent!");
+    } catch (err) {
+      console.error("Error sending welcome email:", err);
+    }
+  });  
 
 // User Login
 app.post("/login", async (req, res) => {
