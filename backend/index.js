@@ -13,6 +13,7 @@ const axios = require('axios');
 const app = express();
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
+const otpStore = new Map();
 
 // Vercel uses this variable to set the correct port
 const port = process.env.PORT || 8000;
@@ -188,6 +189,50 @@ app.post('/reset-password/:token', async (req, res) => {
     res.status(500).send("Failed to reset password");
   }
 });
+
+//OTP Verficivation
+app.post("/send-otp", async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).send("Email is required");
+
+  const otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
+  otpStore.set(email, { otp, expires: Date.now() + 5 * 60 * 1000 }); // 5 mins
+
+  try {
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: "holodecor@gmail.com",
+        pass: "fyatolmfruarvbkw" // App password
+      }
+    });
+
+    await transporter.sendMail({
+      from: 'HoloDecor <holodecor@gmail.com>',
+      to: email,
+      subject: 'Your OTP Code',
+      html: `<h3>Your OTP is: ${otp}</h3><p>It expires in 5 minutes.</p>`
+    });
+
+    res.json({ message: "OTP sent to your email!" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Failed to send OTP");
+  }
+});
+
+app.post("/verify-otp", (req, res) => {
+    const { email, otp } = req.body;
+    const stored = otpStore.get(email);
+  
+    if (!stored || stored.otp !== otp || Date.now() > stored.expires) {
+      return res.status(400).send("Invalid or expired OTP");
+    }
+  
+    otpStore.delete(email);
+    res.json({ success: true });
+  });
+  
 
 
 // Stripe Payment

@@ -19,6 +19,7 @@
     "cors": "^2.8.5",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
+    "map": "^1.0.1",
     "mongoose": "^8.14.0",
     "multer": "^1.4.5-lts.2",
     "node-fetch": "^3.3.2",

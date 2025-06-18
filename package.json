@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "map": "^1.0.1",
     "nodemailer": "^7.0.3"
   }
 }
