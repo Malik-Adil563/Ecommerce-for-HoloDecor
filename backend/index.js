@@ -300,8 +300,22 @@ app.delete('/deleteProduct/:id', async (req, res) => {
 
 // Update product
 app.put('/updateProduct/:id', async (req, res) => {
-  const updated = await Products.findByIdAndUpdate(req.params.id, req.body, { new: true });
-  res.json(updated);
+  try {
+    const updated = await Products.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update User
+app.put('/updateUser/:id', async (req, res) => {
+  try {
+    const updated = await User.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // Send promotion to all users
