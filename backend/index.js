@@ -6,6 +6,7 @@ const Products = require('./models/products.js');
 const User = require('./models/Users.js');
 const PaymentHistory = require('./models/PaymentHistory.js');
 const Subscriber = require('./models/Subscriber.js');
+const ContactMessage = require('./models/ContactMessage.js');
 const bcryptjs = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const cookieParser = require("cookie-parser");
@@ -447,6 +448,63 @@ app.put('/updateSubscriber/:id', async (req, res) => {
   }
 });
 
+//saving message from contact us page
+app.post('/contact', async (req, res) => {
+  const { name, email, message } = req.body;
+
+  try {
+    const saved = await ContactMessage.create({ name, email, message });
+    res.status(201).json(saved);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+//fetching contact messages
+app.get('/getAllMessages', async (req, res) => {
+  try {
+    const messages = await ContactMessage.find().sort({ createdAt: -1 });
+    res.json(messages);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+//replying to contact messages
+app.post('/replyMessage/:id', async (req, res) => {
+  const { id } = req.params;
+  const { replyMessage } = req.body;
+
+  try {
+    const message = await ContactMessage.findById(id);
+    if (!message) return res.status(404).json({ error: 'Message not found' });
+
+    // Send email
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: 'holodecor@gmail.com',
+        pass: 'fyatolmfruarvbkw'
+      }
+    });
+
+    await transporter.sendMail({
+      from: 'HoloDecor <holodecor@gmail.com>',
+      to: message.email,
+      subject: 'Reply to your contact message',
+      html: `<p>Dear ${message.name},</p><p>${replyMessage}</p><br><p>Best regards,<br>HoloDecor Support</p>`
+    });
+
+    // Update message status
+    message.replied = true;
+    message.replyMessage = replyMessage;
+    await message.save();
+
+    res.json({ success: true, message: 'Reply sent and saved' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 //Stripe Payment
 app.post("/payment", async (req, res) => {
