@@ -280,7 +280,55 @@ app.post("/verify-otp", (req, res) => {
     res.json({ success: true });
   });
   
-  
+  // Get all users
+app.get('/getAllUsers', async (req, res) => {
+  const users = await User.find({}, '-password');
+  res.json(users);
+});
+
+// Delete user
+app.delete('/deleteUser/:id', async (req, res) => {
+  await User.findByIdAndDelete(req.params.id);
+  res.send('User deleted');
+});
+
+// Delete product
+app.delete('/deleteProduct/:id', async (req, res) => {
+  await Products.findByIdAndDelete(req.params.id);
+  res.send('Product deleted');
+});
+
+// Update product
+app.put('/updateProduct/:id', async (req, res) => {
+  const updated = await Products.findByIdAndUpdate(req.params.id, req.body, { new: true });
+  res.json(updated);
+});
+
+// Send promotion to all users
+app.post('/sendPromotionToAllUsers', async (req, res) => {
+  const { title, message } = req.body;
+  const users = await User.find({}, 'email');
+
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: "holodecor@gmail.com",
+      pass: "fyatolmfruarvbkw"
+    }
+  });
+
+  for (const user of users) {
+    await transporter.sendMail({
+      from: 'HoloDecor <holodecor@gmail.com>',
+      to: user.email,
+      subject: title,
+      html: `<p>${message}</p>`
+    });
+  }
+
+  res.send('Promotions sent');
+});
+
 
 
 // Stripe Payment
