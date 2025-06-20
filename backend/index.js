@@ -7,6 +7,7 @@ const User = require('./models/Users.js');
 const PaymentHistory = require('./models/PaymentHistory.js');
 const Subscriber = require('./models/Subscriber.js');
 const ContactMessage = require('./models/ContactMessage.js');
+const Notification = require('./models/Notification.js');
 const Admin = require('./models/Admin.js');
 const bcryptjs = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -17,6 +18,8 @@ const axios = require('axios');
 const app = express();
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
+const http = require('http');
+const { Server } = require('socket.io');
 const otpStore = new Map();
 
 // Vercel uses this variable to set the correct port
@@ -517,6 +520,51 @@ app.get('/getAdmins', async (req, res) => {
   }
 });
 
+//adding product
+app.post('/addProduct', async (req, res) => {
+  const { title, price, image, description, category, productCode } = req.body;
+
+  try {
+    const newProduct = await Products.create({
+      title,
+      price,
+      image,
+      description,
+      category,
+      productCode
+    });
+
+    res.status(201).json(newProduct);
+  } catch (error) {
+    console.error('Error adding product:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+//posting real-time notifications
+app.post('/sendNotification', async (req, res) => {
+  const { title, message } = req.body;
+  try {
+    const newNotif = await Notification.create({ title, message });
+    // Trigger real-time updates via Socket.io (if set up)
+    const io = req.app.get("io");
+    io.emit('new-notification', newNotif);
+    res.status(201).json(newNotif);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+//fetching notifications
+app.get('/getNotifications', async (req, res) => {
+  try {
+    const notifs = await Notification.find().sort({ createdAt: -1 });
+    res.json(notifs);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 //Stripe Payment
 app.post("/payment", async (req, res) => {
   const { product, token, firstName, lastName, email, country, address } = req.body;
@@ -564,6 +612,33 @@ app.post("/payment", async (req, res) => {
   }
 });
 
-app.listen(port, () => {
+// 👇 Create HTTP server manually
+const server = http.createServer(app);
+
+// 👇 Initialize Socket.IO with CORS support
+const io = new Server(server, {
+  cors: {
+    origin: [
+      "http://localhost:3000",
+      "https://holo-decor-ar-frontend.vercel.app"
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true
+  }
+});
+
+// Optional: Access `io` inside routes using app.get('io')
+app.set("io", io);
+
+// 👂 Socket.IO connection
+io.on("connection", (socket) => {
+  console.log("Socket connected:", socket.id);
+
+  socket.on("disconnect", () => {
+    console.log("Socket disconnected:", socket.id);
+  });
+});
+
+server.listen(port, () => {
     console.log(`Server is running on port ${port}!`);
 });
