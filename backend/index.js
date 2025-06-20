@@ -7,6 +7,7 @@ const User = require('./models/Users.js');
 const PaymentHistory = require('./models/PaymentHistory.js');
 const Subscriber = require('./models/Subscriber.js');
 const ContactMessage = require('./models/ContactMessage.js');
+const Admin = require('./models/Admin.js');
 const bcryptjs = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const cookieParser = require("cookie-parser");
@@ -501,6 +502,16 @@ app.post('/replyMessage/:id', async (req, res) => {
     await message.save();
 
     res.json({ success: true, message: 'Reply sent and saved' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+//fetching admins
+app.get('/getAdmins', async (req, res) => {
+  try {
+    const admins = await Admin.find().select('-__v'); // exclude __v field
+    res.json(admins);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
