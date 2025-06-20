@@ -4,6 +4,8 @@ const { run } = require('./models/mongo.js');
 run();
 const Products = require('./models/products.js');
 const User = require('./models/Users.js');
+const PaymentHistory = require('./models/PaymentHistory.js');
+const Subscriber = require('./models/Subscriber.js');
 const bcryptjs = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const cookieParser = require("cookie-parser");
@@ -317,63 +319,180 @@ app.put('/updateUser/:id', async (req, res) => {
   }
 });
 
-// Send promotion to all users
+// Send promotion to all users and subscribers
 app.post('/sendPromotionToAllUsers', async (req, res) => {
   const { title, message } = req.body;
-  const users = await User.find({}, 'email');
 
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: "holodecor@gmail.com",
-      pass: "fyatolmfruarvbkw"
-    }
-  });
+  try {
+    // Fetch all emails from Users and Subscribers
+    const users = await User.find({}, 'email');
+    const subscribers = await Subscriber.find({}, 'email');
 
-  for (const user of users) {
-    await transporter.sendMail({
-      from: 'HoloDecor <holodecor@gmail.com>',
-      to: user.email,
-      subject: title,
-      html: `<p>${message}</p>`
+    const allEmails = [
+      ...new Set([
+        ...users.map(u => u.email),
+        ...subscribers.map(s => s.email)
+      ])
+    ]; // Remove duplicates using Set
+
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: "holodecor@gmail.com",
+        pass: "fyatolmfruarvbkw"
+      }
     });
-  }
 
-  res.send('Promotions sent');
+    // Send emails one by one (or batch if needed)
+    for (const email of allEmails) {
+      await transporter.sendMail({
+        from: 'HoloDecor <holodecor@gmail.com>',
+        to: email,
+        subject: title,
+        html: `<p>${message}</p>`
+      });
+    }
+
+    res.send('Promotions sent to all users and subscribers');
+  } catch (error) {
+    console.error('Error sending promotions:', error);
+    res.status(500).json({ error: 'Failed to send promotions' });
+  }
+});
+
+//subscribers
+app.post('/subscribe', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    // Email format validation
+    const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    if (!email || !isValidEmail) {
+      return res.status(400).json({ error: 'Invalid email format' });
+    }
+
+    // Check for existing subscriber
+    const existing = await Subscriber.findOne({ email });
+    if (existing) {
+      return res.status(400).json({ error: 'Email already subscribed' });
+    }
+
+    // Create and save subscriber
+    const subscriber = new Subscriber({ email });
+    const saved = await subscriber.save();
+    res.status(200).json(saved);
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+//fetching payment history
+app.get('/getAllPayments', async (req, res) => {
+  try {
+    const records = await PaymentHistory.find();
+    res.json(records);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+//deleting payment history
+app.delete('/deletePayment/:id', async (req, res) => {
+  try {
+    await PaymentHistory.findByIdAndDelete(req.params.id);
+    res.send('Payment record deleted');
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+//updating payment record
+app.put('/updatePayment/:id', async (req, res) => {
+  try {
+    const updated = await PaymentHistory.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+//fetching subscribers
+app.get('/getAllSubscribers', async (req, res) => {
+  try {
+    const subscribers = await Subscriber.find();
+    res.json(subscribers);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+//deleting subscribers
+app.delete('/deleteSubscriber/:id', async (req, res) => {
+  try {
+    await Subscriber.findByIdAndDelete(req.params.id);
+    res.send('Subscriber deleted');
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+//updating subscribers
+app.put('/updateSubscriber/:id', async (req, res) => {
+  try {
+    const updated = await Subscriber.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 
-
-// Stripe Payment
+//Stripe Payment
 app.post("/payment", async (req, res) => {
-    const { product, token } = req.body;
-    const idempotencyKey = uuid();
+  const { product, token, firstName, lastName, email, country, address } = req.body;
+  const idempotencyKey = uuid();
 
-    try {
-        const customer = await stripe.customers.create({
-            email: token.email,
-            source: token.id
-        });
+  try {
+    const customer = await stripe.customers.create({
+      email: token.email,
+      source: token.id
+    });
 
-        const charge = await stripe.charges.create({
-            amount: product.price * 100,
-            currency: 'pkr',
-            customer: customer.id,
-            receipt_email: token.email,
-            description: `Purchase of ${product.name}`,
-            shipping: {
-                name: `${token.card.first_name} ${token.card.last_name}`,
-                address: {
-                    country: token.card.country,
-                    line1: token.card.address
-                }
-            }
-        }, { idempotencyKey });
+    const charge = await stripe.charges.create({
+      amount: product.price * 100,
+      currency: 'pkr',
+      customer: customer.id,
+      receipt_email: token.email,
+      description: `Purchase of ${product.name}`,
+      shipping: {
+        name: `${firstName} ${lastName}`,
+        address: {
+          line1: address,
+          country: country
+        }
+      }
+    }, { idempotencyKey });
 
-        res.status(200).json(charge);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+    // Save to MongoDB
+    const paymentRecord = new PaymentHistory({
+      firstName,
+      lastName,
+      email,
+      address,
+      country,
+      product,
+      stripeTokenId: token.id,
+    });
+
+    await paymentRecord.save();
+
+    res.status(200).json({ message: "Payment successful and saved", charge });
+
+  } catch (err) {
+    console.error("Payment error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.listen(port, () => {
