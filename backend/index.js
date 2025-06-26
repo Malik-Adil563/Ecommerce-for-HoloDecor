@@ -22,7 +22,6 @@ const http = require('http');
 const { Server } = require('socket.io');
 const otpStore = new Map();
 
-// Vercel uses this variable to set the correct port
 const port = process.env.PORT || 8000;
 
 app.use(express.json());
@@ -45,26 +44,6 @@ app.get('/getProducts', async (req, res) => {
         res.json(products);
     } catch (error) {
         console.error('Error fetching products:', error);
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// Wall detection route (updated for Replit)
-// Add a route for wall detection
-app.post('/detect-wall', async (req, res) => {
-    try {
-        const { image } = req.body;  // Expecting image data in the request body
-        
-        // Send image to the Python Flask server
-        const response = await axios.post('https://14cf3993-0a8a-4fcc-a670-81d92d092b65-00-3ib9bcwcj2mzr.sisko.replit.dev/detect-wall', { image });
-        
-        if (response.data.wallDetected) {
-            res.status(200).json({ wallDetected: true });
-        } else {
-            res.status(200).json({ wallDetected: false });
-        }
-    } catch (error) {
-        console.error('Error detecting wall:', error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -117,12 +96,10 @@ app.post("/register", async (req, res) => {
         port: 465,
         secure: true,
         auth: {
-            user: "holodecor@gmail.com",
-            pass: "fyatolmfruarvbkw" // Use app password, not your actual Gmail password
-          }
+        user: 'holodecor7@gmail.com',
+        pass: 'ovdtkfdzboilbmpy'
+      }
       });
-  
-      // ✅ Email content (edit as needed)
       const mailOptions = {
         from: 'HoloDecor <holodecor@gmail.com>',
         to: email,
@@ -144,7 +121,6 @@ app.post("/register", async (req, res) => {
         `
       };
   
-      // ✅ Send welcome email
       try {
         await transporter.sendMail(mailOptions);
       } catch (emailErr) {
@@ -183,7 +159,7 @@ app.post("/login", async (req, res) => {
     }
 });
 
-// Step 1: Send reset link
+//Send reset link
 app.post('/forgot-password', async (req, res) => {
   const { email } = req.body;
 
@@ -201,8 +177,8 @@ app.post('/forgot-password', async (req, res) => {
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: "holodecor@gmail.com",
-        pass: "fyatolmfruarvbkw" // Use app password, not your actual Gmail password
+        user: 'holodecor7@gmail.com',
+        pass: 'ovdtkfdzboilbmpy'
       }
     });
 
@@ -222,7 +198,7 @@ app.post('/forgot-password', async (req, res) => {
   }
 });
 
-// Step 2: Reset password using token
+//Reset password using token
 app.post('/reset-password/:token', async (req, res) => {
   const { token } = req.params;
   const { password } = req.body;
@@ -243,7 +219,7 @@ app.post('/reset-password/:token', async (req, res) => {
   }
 });
 
-//OTP Verficivation
+//OTP Verification
 app.post("/send-otp", async (req, res) => {
   const { email } = req.body;
   if (!email) return res.status(400).send("Email is required");
@@ -255,8 +231,8 @@ app.post("/send-otp", async (req, res) => {
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: "holodecor@gmail.com",
-        pass: "fyatolmfruarvbkw" // App password
+        user: 'holodecor7@gmail.com',
+        pass: 'ovdtkfdzboilbmpy'
       }
     });
 
@@ -274,6 +250,7 @@ app.post("/send-otp", async (req, res) => {
   }
 });
 
+//verify otp
 app.post("/verify-otp", (req, res) => {
     const { email, otp } = req.body;
     const stored = otpStore.get(email);
@@ -286,7 +263,7 @@ app.post("/verify-otp", (req, res) => {
     res.json({ success: true });
   });
   
-  // Get all users
+// Get all users
 app.get('/getAllUsers', async (req, res) => {
   const users = await User.find({}, '-password');
   res.json(users);
@@ -329,7 +306,6 @@ app.post('/sendPromotionToAllUsers', async (req, res) => {
   const { title, message } = req.body;
 
   try {
-    // Fetch all emails from Users and Subscribers
     const users = await User.find({}, 'email');
     const subscribers = await Subscriber.find({}, 'email');
 
@@ -338,17 +314,16 @@ app.post('/sendPromotionToAllUsers', async (req, res) => {
         ...users.map(u => u.email),
         ...subscribers.map(s => s.email)
       ])
-    ]; // Remove duplicates using Set
+    ];
 
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: "holodecor@gmail.com",
-        pass: "fyatolmfruarvbkw"
+        user: 'holodecor7@gmail.com',
+        pass: 'ovdtkfdzboilbmpy'
       }
     });
 
-    // Send emails one by one (or batch if needed)
     for (const email of allEmails) {
       await transporter.sendMail({
         from: 'HoloDecor <holodecor@gmail.com>',
@@ -369,20 +344,14 @@ app.post('/sendPromotionToAllUsers', async (req, res) => {
 app.post('/subscribe', async (req, res) => {
   try {
     const { email } = req.body;
-
-    // Email format validation
     const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     if (!email || !isValidEmail) {
       return res.status(400).json({ error: 'Invalid email format' });
     }
-
-    // Check for existing subscriber
     const existing = await Subscriber.findOne({ email });
     if (existing) {
       return res.status(400).json({ error: 'Email already subscribed' });
     }
-
-    // Create and save subscriber
     const subscriber = new Subscriber({ email });
     const saved = await subscriber.save();
     res.status(200).json(saved);
@@ -482,13 +451,11 @@ app.post('/replyMessage/:id', async (req, res) => {
   try {
     const message = await ContactMessage.findById(id);
     if (!message) return res.status(404).json({ error: 'Message not found' });
-
-    // Send email
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: 'holodecor@gmail.com',
-        pass: 'fyatolmfruarvbkw'
+        user: 'holodecor7@gmail.com',
+        pass: 'ovdtkfdzboilbmpy'
       }
     });
 
@@ -546,7 +513,6 @@ app.post('/sendNotification', async (req, res) => {
   const { title, message } = req.body;
   try {
     const newNotif = await Notification.create({ title, message });
-    // Trigger real-time updates via Socket.io (if set up)
     const io = req.app.get("io");
     io.emit('new-notification', newNotif);
     res.status(201).json(newNotif);
@@ -590,8 +556,6 @@ app.post("/payment", async (req, res) => {
         }
       }
     }, { idempotencyKey });
-
-    // Save to MongoDB
     const paymentRecord = new PaymentHistory({
       firstName,
       lastName,
@@ -611,11 +575,7 @@ app.post("/payment", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
-// 👇 Create HTTP server manually
 const server = http.createServer(app);
-
-// 👇 Initialize Socket.IO with CORS support
 const io = new Server(server, {
   cors: {
     origin: [
@@ -626,11 +586,7 @@ const io = new Server(server, {
     credentials: true
   }
 });
-
-// Optional: Access `io` inside routes using app.get('io')
 app.set("io", io);
-
-// 👂 Socket.IO connection
 io.on("connection", (socket) => {
   console.log("Socket connected:", socket.id);
 
