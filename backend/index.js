@@ -531,6 +531,40 @@ app.get('/getNotifications', async (req, res) => {
   }
 });
 
+// Change Password after Login
+app.post('/change-password', async (req, res) => {
+  const { email, currentPassword, newPassword } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const isMatch = await bcryptjs.compare(currentPassword, user.password);
+    if (!isMatch) return res.status(400).json({ error: 'Wrong current password' });
+
+    user.password = await bcryptjs.hash(newPassword, 10);
+    await user.save();
+
+    res.json({ message: 'Password changed successfully!' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to change password' });
+  }
+});
+
+//change password by admin route
+app.put('/changeUserPassword/:id', async (req, res) => {
+  const { id } = req.params;
+  const { password } = req.body;
+
+  try {
+    const updatedUser = await User.findByIdAndUpdate(id, { password }, { new: true });
+    res.json(updatedUser);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 //Stripe Payment
 app.post("/payment", async (req, res) => {
   const { product, token, firstName, lastName, email, country, address } = req.body;
