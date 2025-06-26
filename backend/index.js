@@ -552,7 +552,7 @@ app.post('/change-password', async (req, res) => {
   }
 });
 
-//change password by admin route
+//change password by admin routes
 app.put('/changeUserPassword/:id', async (req, res) => {
   const { id } = req.params;
   const { password } = req.body;
