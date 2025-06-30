@@ -96,8 +96,8 @@ app.post("/register", async (req, res) => {
         port: 465,
         secure: true,
         auth: {
-        user: 'holodecor7@gmail.com',
-        pass: 'dlgjiwsguawouick'
+        user: 'holodecor1@gmail.com',
+        pass: 'mfijweoebecjnhpn'
       }
       });
       const mailOptions = {
@@ -177,8 +177,8 @@ app.post('/forgot-password', async (req, res) => {
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: 'holodecor7@gmail.com',
-        pass: 'dlgjiwsguawouick'
+        user: 'holodecor1@gmail.com',
+        pass: 'mfijweoebecjnhpn'
       }
     });
 
@@ -231,8 +231,8 @@ app.post("/send-otp", async (req, res) => {
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: 'holodecor7@gmail.com',
-        pass: 'dlgjiwsguawouick'
+        user: 'holodecor1@gmail.com',
+        pass: 'mfijweoebecjnhpn'
       }
     });
 
@@ -319,8 +319,8 @@ app.post('/sendPromotionToAllUsers', async (req, res) => {
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: 'holodecor7@gmail.com',
-        pass: 'dlgjiwsguawouick'
+        user: 'holodecor1@gmail.com',
+        pass: 'mfijweoebecjnhpn'
       }
     });
 
@@ -454,8 +454,8 @@ app.post('/replyMessage/:id', async (req, res) => {
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: 'holodecor7@gmail.com',
-        pass: 'dlgjiwsguawouick'
+        user: 'holodecor1@gmail.com',
+        pass: 'mfijweoebecjnhpn'
       }
     });
 
