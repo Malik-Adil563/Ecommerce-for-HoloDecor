@@ -97,7 +97,7 @@ app.post("/register", async (req, res) => {
         secure: true,
         auth: {
         user: 'holodecor7@gmail.com',
-        pass: 'ovdtkfdzboilbmpy'
+        pass: 'dlgjiwsguawouick'
       }
       });
       const mailOptions = {
@@ -178,7 +178,7 @@ app.post('/forgot-password', async (req, res) => {
       service: "gmail",
       auth: {
         user: 'holodecor7@gmail.com',
-        pass: 'ovdtkfdzboilbmpy'
+        pass: 'dlgjiwsguawouick'
       }
     });
 
@@ -232,7 +232,7 @@ app.post("/send-otp", async (req, res) => {
       service: "gmail",
       auth: {
         user: 'holodecor7@gmail.com',
-        pass: 'ovdtkfdzboilbmpy'
+        pass: 'dlgjiwsguawouick'
       }
     });
 
@@ -320,7 +320,7 @@ app.post('/sendPromotionToAllUsers', async (req, res) => {
       service: 'gmail',
       auth: {
         user: 'holodecor7@gmail.com',
-        pass: 'ovdtkfdzboilbmpy'
+        pass: 'dlgjiwsguawouick'
       }
     });
 
@@ -455,7 +455,7 @@ app.post('/replyMessage/:id', async (req, res) => {
       service: 'gmail',
       auth: {
         user: 'holodecor7@gmail.com',
-        pass: 'ovdtkfdzboilbmpy'
+        pass: 'dlgjiwsguawouick'
       }
     });
 
